@@ -27,14 +27,28 @@ function Register() {
 
     try {
       const userId = crypto.randomUUID();
-      await registerUser({ ...formData, userId });
+      const userData = {
+        userId,
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        passwordHash: formData.passwordHash
+      };
 
-      // Show success message and redirect
-      setError({ isSuccess: true, message: 'Registration successful!' });
-      setTimeout(() => navigate('/login'), 1500);
+      await registerUser(userData);
+      alert('Registration successful! Please login.');
+      navigate('/login');
     } catch (err) {
-      console.error('Registration error:', err.response?.data || err.message);
-      setError({ isSuccess: false, message: err.response?.data || 'Registration failed. Please try again.' });
+      console.error('Registration error:', err);
+      if (err.response?.status === 409) {
+        setError('Email already exists. Please use a different email.');
+      } else if (err.response?.data) {
+        setError(err.response.data);
+      } else if (err.message.includes('Network Error')) {
+        setError('Unable to connect to the server. Please try again later.');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -100,12 +114,16 @@ function Register() {
           </div>
 
           {error && (
-            <div style={error.isSuccess ? styles.success : styles.error}>
-              {error.message}
+            <div style={styles.error}>
+              {error}
             </div>
           )}
 
-          <button type="submit" disabled={loading} style={styles.button}>
+          <button
+            type="submit"
+            disabled={loading}
+            style={styles.button}
+          >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
 
@@ -163,9 +181,6 @@ const styles = {
     fontSize: '1rem',
     transition: 'border-color 0.2s ease',
     outline: 'none',
-    '&:focus': {
-      borderColor: '#4299e1',
-    },
   },
   select: {
     width: '100%',
@@ -177,9 +192,6 @@ const styles = {
     outline: 'none',
     backgroundColor: '#fff',
     cursor: 'pointer',
-    '&:focus': {
-      borderColor: '#4299e1',
-    },
   },
   button: {
     backgroundColor: '#4299e1',
@@ -192,13 +204,6 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
     marginTop: '0.5rem',
-    '&:hover': {
-      backgroundColor: '#3182ce',
-    },
-    '&:disabled': {
-      backgroundColor: '#a0aec0',
-      cursor: 'not-allowed',
-    },
   },
   error: {
     color: '#e53e3e',
@@ -206,15 +211,6 @@ const styles = {
     marginBottom: '1rem',
     padding: '0.5rem',
     backgroundColor: '#fff5f5',
-    borderRadius: '6px',
-    textAlign: 'center',
-  },
-  success: {
-    color: '#2f855a',
-    fontSize: '0.875rem',
-    marginBottom: '1rem',
-    padding: '0.5rem',
-    backgroundColor: '#f0fff4',
     borderRadius: '6px',
     textAlign: 'center',
   },
@@ -226,9 +222,6 @@ const styles = {
     color: '#4299e1',
     textDecoration: 'none',
     fontSize: '0.875rem',
-    '&:hover': {
-      textDecoration: 'underline',
-    },
   },
 };
 

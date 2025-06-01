@@ -1,16 +1,25 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // baseURL: 'https://localhost:7229',
   baseURL: 'https://backendprojectwebapp-c4azccb4dbbchsdc.centralindia-01.azurewebsites.net',
   headers: {
     'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': 'https://gray-beach-076d1a300.6.azurestaticapps.net',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+    'Access-Control-Allow-Headers': 'Content-Type'
   },
+  withCredentials: true
 });
 
 // Register a new user
 const registerUser = async (userData) => {
-  return api.post('/api/UserModels', userData);
+  try {
+    const response = await api.post('/api/UserModels', userData);
+    return response;
+  } catch (error) {
+    console.error('Registration error:', error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // Login user
