@@ -110,12 +110,12 @@ const TakeAssessment = () => {
 
     try {
       const submission = {
-        assessmentId: selectedAssessment.assessmentId,
-        answers: answers[selectedAssessment.assessmentId],
-        userId: localStorage.getItem('userId'),
-        score: calculateScore(),
-        resultId: crypto.randomUUID(),
-        attemptDate: new Date().toISOString()
+        AssessmentId: selectedAssessment.assessmentId,
+        Answers: JSON.stringify(answers[selectedAssessment.assessmentId]),
+        UserId: localStorage.getItem('userId'),
+        Score: calculateScore(),
+        ResultId: crypto.randomUUID(),
+        AttemptDate: new Date().toISOString()
       };
 
       await submitAssessment(submission);
