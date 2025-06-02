@@ -109,22 +109,51 @@ const TakeAssessment = () => {
     }
 
     try {
+      // Validate userId
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('User ID is required. Please log in again.');
+      }
+
+      // Calculate score first to validate
+      const score = calculateScore();
+      if (typeof score !== 'number') {
+        throw new Error('Invalid score calculation');
+      }
+
+      // Validate answers
+      const currentAnswers = answers[selectedAssessment.assessmentId];
+      if (!currentAnswers || Object.keys(currentAnswers).length === 0) {
+        throw new Error('No answers provided');
+      }
+
       const submission = {
         AssessmentId: selectedAssessment.assessmentId,
-        Answers: JSON.stringify(answers[selectedAssessment.assessmentId]),
-        UserId: localStorage.getItem('userId'),
-        Score: calculateScore(),
+        Answers: JSON.stringify(currentAnswers),
+        UserId: userId,
+        Score: score,
         ResultId: crypto.randomUUID(),
         AttemptDate: new Date().toISOString()
       };
 
+      // Validate all required fields are present and have correct types
+      if (!submission.AssessmentId || typeof submission.AssessmentId !== 'string') {
+        throw new Error('Invalid Assessment ID');
+      }
+
+      console.log('Submitting assessment with data:', submission);
       await submitAssessment(submission);
       setSubmitted(prev => ({ ...prev, [selectedAssessment.assessmentId]: true }));
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 3000);
     } catch (err) {
-      console.error('Submission error:', err);
-      alert('Failed to submit assessment. Please try again.');
+      console.error('Submission error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        data: err.config?.data
+      });
+      alert(err.response?.data || err.message || 'Failed to submit assessment. Please try again.');
     }
   };
 
