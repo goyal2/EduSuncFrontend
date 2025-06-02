@@ -127,22 +127,29 @@ const TakeAssessment = () => {
         throw new Error('No answers provided');
       }
 
+      // Format answers as an array of question-answer pairs
+      const formattedAnswers = Object.entries(currentAnswers).map(([question, answer]) => ({
+        question,
+        answer
+      }));
+
       const submission = {
         AssessmentId: selectedAssessment.assessmentId,
-        Answers: JSON.stringify(currentAnswers),
+        Answers: JSON.stringify(formattedAnswers),
         UserId: userId,
         Score: score,
-        ResultId: crypto.randomUUID(),
+        // Remove ResultId to let the backend generate it
         AttemptDate: new Date().toISOString()
       };
 
-      // Validate all required fields are present and have correct types
-      if (!submission.AssessmentId || typeof submission.AssessmentId !== 'string') {
-        throw new Error('Invalid Assessment ID');
-      }
+      console.log('Submitting assessment with data:', {
+        ...submission,
+        ParsedAnswers: formattedAnswers
+      });
 
-      console.log('Submitting assessment with data:', submission);
-      await submitAssessment(submission);
+      const response = await submitAssessment(submission);
+      console.log('Submission successful:', response);
+
       setSubmitted(prev => ({ ...prev, [selectedAssessment.assessmentId]: true }));
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 3000);
@@ -151,7 +158,8 @@ const TakeAssessment = () => {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
-        data: err.config?.data
+        requestData: err.config?.data,
+        fullError: err
       });
       alert(err.response?.data || err.message || 'Failed to submit assessment. Please try again.');
     }

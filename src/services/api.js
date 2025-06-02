@@ -96,14 +96,21 @@ export const getAllCourses = async () => {
 export const submitAssessment = async (submission) => {
   try {
     console.log('API: Submitting assessment with data:', submission);
-    const response = await api.post('/api/ResultModels', submission);
+    const response = await api.post('/api/ResultModels', submission, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    console.log('API: Submission response:', response);
     return response;
   } catch (error) {
     console.error('API: Assessment submission failed:', {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
-      data: error.config?.data
+      requestData: JSON.stringify(submission),
+      headers: error.config?.headers
     });
     throw error;
   }
