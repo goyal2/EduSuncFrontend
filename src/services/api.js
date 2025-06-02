@@ -1,25 +1,16 @@
 import axios from 'axios';
 
 const api = axios.create({
+  // baseURL: 'https://localhost:7229',
   baseURL: 'https://backendprojectwebapp-c4azccb4dbbchsdc.centralindia-01.azurewebsites.net',
   headers: {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': 'https://gray-beach-076d1a300.6.azurestaticapps.net',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-    'Access-Control-Allow-Headers': 'Content-Type'
   },
-  withCredentials: true
 });
 
 // Register a new user
 const registerUser = async (userData) => {
-  try {
-    const response = await api.post('/api/UserModels', userData);
-    return response;
-  } catch (error) {
-    console.error('Registration error:', error.response?.data || error.message);
-    throw error;
-  }
+  return api.post('/api/UserModels', userData);
 };
 
 // Login user
@@ -102,7 +93,24 @@ export const getAllCourses = async () => {
   return await api.get('/api/CourseModels');
 };
 
-export const submitAssessment = (submission) => api.post('/api/ResultModels', submission);
+export const submitAssessment = async (submission) => {
+  try {
+    // Convert to PascalCase for backend API
+    const formattedSubmission = {
+      ResultId: submission.resultId,
+      AssessmentId: submission.assessmentId,
+      UserId: submission.userId,
+      Score: submission.score,
+      Answers: JSON.stringify(submission.answers),
+      AttemptDate: submission.attemptDate
+    };
+
+    return await api.post('/api/ResultModels', formattedSubmission);
+  } catch (error) {
+    console.error('Assessment submission failed:', error.response?.data || error.message);
+    throw error;
+  }
+};
 
 export const getAllResults = () => {
   return api.get('/api/ResultModels');

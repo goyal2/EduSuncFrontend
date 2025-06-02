@@ -109,22 +109,33 @@ const TakeAssessment = () => {
     }
 
     try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        alert('Please log in to submit the assessment.');
+        navigate('/login');
+        return;
+      }
+
       const submission = {
-        assessmentId: selectedAssessment.assessmentId,
-        answers: answers[selectedAssessment.assessmentId],
-        userId: localStorage.getItem('userId'),
-        score: calculateScore(),
         resultId: crypto.randomUUID(),
+        assessmentId: selectedAssessment.assessmentId,
+        userId: userId,
+        score: calculateScore(),
+        answers: JSON.stringify(answers[selectedAssessment.assessmentId] || {}),
         attemptDate: new Date().toISOString()
       };
 
       await submitAssessment(submission);
       setSubmitted(prev => ({ ...prev, [selectedAssessment.assessmentId]: true }));
       setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 3000);
+      setTimeout(() => {
+        setShowSuccessToast(false);
+        navigate('/student/results');
+      }, 3000);
     } catch (err) {
       console.error('Submission error:', err);
-      alert('Failed to submit assessment. Please try again.');
+      const errorMessage = err.response?.data || 'Failed to submit assessment. Please try again.';
+      alert(errorMessage);
     }
   };
 
