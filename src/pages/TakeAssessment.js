@@ -127,10 +127,11 @@ const TakeAssessment = () => {
         throw new Error('No answers provided');
       }
 
-      // Format answers as an array of question-answer pairs
+      // Format answers as an array of question-answer pairs with metadata
       const formattedAnswers = Object.entries(currentAnswers).map(([question, answer]) => ({
-        question,
-        answer
+        questionText: question,
+        selectedAnswer: answer,
+        points: question.includes("cloud computing") ? 5 : 2 // Map points based on question
       }));
 
       const submission = {
@@ -138,7 +139,8 @@ const TakeAssessment = () => {
         Answers: JSON.stringify(formattedAnswers),
         UserId: userId,
         Score: score,
-        // Remove ResultId to let the backend generate it
+        TotalScore: selectedAssessment.maxScore, // Add total possible score
+        Title: selectedAssessment.title, // Add assessment title
         AttemptDate: new Date().toISOString()
       };
 

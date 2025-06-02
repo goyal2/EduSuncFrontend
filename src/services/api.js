@@ -95,23 +95,28 @@ export const getAllCourses = async () => {
 
 export const submitAssessment = async (submission) => {
   try {
-    console.log('API: Submitting assessment with data:', submission);
-    const response = await api.post('/api/ResultModels', submission, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+    console.log('API: Submitting assessment with data:', {
+      ...submission,
+      ParsedAnswers: JSON.parse(submission.Answers)
     });
+
+    const response = await api.post('/api/ResultModels', submission);
     console.log('API: Submission response:', response);
     return response;
   } catch (error) {
-    console.error('API: Assessment submission failed:', {
+    const errorDetails = {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status,
-      requestData: JSON.stringify(submission),
-      headers: error.config?.headers
-    });
+      requestData: submission,
+      parsedAnswers: JSON.parse(submission.Answers)
+    };
+    console.error('API: Assessment submission failed:', errorDetails);
+
+    // Enhance error message based on status code
+    if (error.response?.status === 500) {
+      throw new Error('Server error: The assessment could not be submitted. Please try again or contact support if the issue persists.');
+    }
     throw error;
   }
 };
