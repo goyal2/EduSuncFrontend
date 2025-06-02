@@ -124,23 +124,25 @@ const TakeAssessment = () => {
       // Get the questions from the assessment
       const questions = JSON.parse(selectedAssessment.questions);
 
-      // Format answers to match each question exactly
-      const formattedAnswers = questions.map(q => ({
-        QuestionNumber: q.question.startsWith('Question 1') ? 1 :
-          q.question.startsWith('Question 2') ? 2 : 3,
-        QuestionText: q.question,
-        SelectedAnswer: answers[selectedAssessment.assessmentId]?.[q.question] || '',
-        Points: q.score || 0,
-        IsCorrect: answers[selectedAssessment.assessmentId]?.[q.question] === q.answer
-      }));
+      // Create a unique result ID
+      const resultId = crypto.randomUUID();
 
       const submission = {
+        ResultId: resultId,
         AssessmentId: selectedAssessment.assessmentId,
         UserId: userId,
         Score: score,
         MaxScore: selectedAssessment.maxScore,
-        SubmissionDate: new Date().toISOString(),
-        Answers: formattedAnswers // Send as array directly, no need to stringify
+        AttemptDate: new Date().toISOString(),
+        AnswersList: questions.map((q, index) => ({
+          ResultId: resultId,
+          QuestionNumber: index + 1,
+          Question: q.question,
+          SelectedAnswer: answers[selectedAssessment.assessmentId]?.[q.question] || '',
+          CorrectAnswer: q.answer,
+          Score: answers[selectedAssessment.assessmentId]?.[q.question] === q.answer ? q.score : 0,
+          MaxScore: q.score
+        }))
       };
 
       console.log('Submitting assessment with data:', submission);

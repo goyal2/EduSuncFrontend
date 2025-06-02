@@ -95,28 +95,35 @@ export const getAllCourses = async () => {
 
 export const submitAssessment = async (submission) => {
   try {
-    // Log the exact data being sent
     console.log('API: Submitting assessment with data:', submission);
 
-    // Make sure we're sending the data in the exact format expected
-    const response = await api.post('/api/ResultModels', {
-      assessmentId: submission.AssessmentId,
-      userId: submission.UserId,
-      score: submission.Score,
-      maxScore: submission.MaxScore,
-      submissionDate: submission.SubmissionDate,
-      answers: submission.Answers.map(a => ({
-        questionNumber: a.QuestionNumber,
-        questionText: a.QuestionText,
-        selectedAnswer: a.SelectedAnswer,
-        points: a.Points,
-        isCorrect: a.IsCorrect
+    // Ensure all required fields are present and in the correct format
+    const payload = {
+      ResultId: submission.ResultId,
+      AssessmentId: submission.AssessmentId,
+      UserId: submission.UserId,
+      Score: submission.Score,
+      MaxScore: submission.MaxScore,
+      AttemptDate: submission.AttemptDate,
+      AnswersList: submission.AnswersList.map(answer => ({
+        ResultId: answer.ResultId,
+        QuestionNumber: answer.QuestionNumber,
+        Question: answer.Question,
+        SelectedAnswer: answer.SelectedAnswer,
+        CorrectAnswer: answer.CorrectAnswer,
+        Score: answer.Score,
+        MaxScore: answer.MaxScore
       }))
+    };
+
+    const response = await api.post('/api/ResultModels', payload, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
 
     return response;
   } catch (error) {
-    // Log detailed error information
     console.error('API: Assessment submission failed:', {
       error: error.message,
       status: error.response?.status,
@@ -124,9 +131,9 @@ export const submitAssessment = async (submission) => {
       submittedData: submission
     });
 
-    // Throw a more informative error
     if (error.response?.status === 500) {
-      throw new Error(`Server Error: ${error.response?.data || 'Could not submit assessment. Please try again.'}`);
+      const errorMessage = error.response?.data || 'Could not submit assessment. Please try again.';
+      throw new Error(`Server Error: ${errorMessage}`);
     }
     throw error;
   }
