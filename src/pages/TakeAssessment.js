@@ -121,36 +121,31 @@ const TakeAssessment = () => {
         throw new Error('Invalid score calculation');
       }
 
-      // Validate answers
-      const currentAnswers = answers[selectedAssessment.assessmentId];
-      if (!currentAnswers || Object.keys(currentAnswers).length === 0) {
-        throw new Error('No answers provided');
-      }
+      // Get the questions from the assessment
+      const questions = JSON.parse(selectedAssessment.questions);
 
-      // Format answers as an array of question-answer pairs with metadata
-      const formattedAnswers = Object.entries(currentAnswers).map(([question, answer]) => ({
-        questionText: question,
-        selectedAnswer: answer,
-        points: question.includes("cloud computing") ? 5 : 2 // Map points based on question
+      // Format answers to match each question exactly
+      const formattedAnswers = questions.map(q => ({
+        QuestionNumber: q.question.startsWith('Question 1') ? 1 :
+          q.question.startsWith('Question 2') ? 2 : 3,
+        QuestionText: q.question,
+        SelectedAnswer: answers[selectedAssessment.assessmentId]?.[q.question] || '',
+        Points: q.score || 0,
+        IsCorrect: answers[selectedAssessment.assessmentId]?.[q.question] === q.answer
       }));
 
       const submission = {
         AssessmentId: selectedAssessment.assessmentId,
-        Answers: JSON.stringify(formattedAnswers),
         UserId: userId,
         Score: score,
-        TotalScore: selectedAssessment.maxScore, // Add total possible score
-        Title: selectedAssessment.title, // Add assessment title
-        AttemptDate: new Date().toISOString()
+        MaxScore: selectedAssessment.maxScore,
+        SubmissionDate: new Date().toISOString(),
+        Answers: formattedAnswers // Send as array directly, no need to stringify
       };
 
-      console.log('Submitting assessment with data:', {
-        ...submission,
-        ParsedAnswers: formattedAnswers
-      });
-
+      console.log('Submitting assessment with data:', submission);
       const response = await submitAssessment(submission);
-      console.log('Submission successful:', response);
+      console.log('Submission response:', response);
 
       setSubmitted(prev => ({ ...prev, [selectedAssessment.assessmentId]: true }));
       setShowSuccessToast(true);

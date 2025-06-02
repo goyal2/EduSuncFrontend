@@ -95,27 +95,38 @@ export const getAllCourses = async () => {
 
 export const submitAssessment = async (submission) => {
   try {
-    console.log('API: Submitting assessment with data:', {
-      ...submission,
-      ParsedAnswers: JSON.parse(submission.Answers)
+    // Log the exact data being sent
+    console.log('API: Submitting assessment with data:', submission);
+
+    // Make sure we're sending the data in the exact format expected
+    const response = await api.post('/api/ResultModels', {
+      assessmentId: submission.AssessmentId,
+      userId: submission.UserId,
+      score: submission.Score,
+      maxScore: submission.MaxScore,
+      submissionDate: submission.SubmissionDate,
+      answers: submission.Answers.map(a => ({
+        questionNumber: a.QuestionNumber,
+        questionText: a.QuestionText,
+        selectedAnswer: a.SelectedAnswer,
+        points: a.Points,
+        isCorrect: a.IsCorrect
+      }))
     });
 
-    const response = await api.post('/api/ResultModels', submission);
-    console.log('API: Submission response:', response);
     return response;
   } catch (error) {
-    const errorDetails = {
-      message: error.message,
-      response: error.response?.data,
+    // Log detailed error information
+    console.error('API: Assessment submission failed:', {
+      error: error.message,
       status: error.response?.status,
-      requestData: submission,
-      parsedAnswers: JSON.parse(submission.Answers)
-    };
-    console.error('API: Assessment submission failed:', errorDetails);
+      responseData: error.response?.data,
+      submittedData: submission
+    });
 
-    // Enhance error message based on status code
+    // Throw a more informative error
     if (error.response?.status === 500) {
-      throw new Error('Server error: The assessment could not be submitted. Please try again or contact support if the issue persists.');
+      throw new Error(`Server Error: ${error.response?.data || 'Could not submit assessment. Please try again.'}`);
     }
     throw error;
   }
